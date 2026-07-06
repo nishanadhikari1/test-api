@@ -1,0 +1,6 @@
+/backend/node_modules
+/backend/generated/prisma
+/frontend/node_modules
+
+/backend/.env
+/frontend/.env
