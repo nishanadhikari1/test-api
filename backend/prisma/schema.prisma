@@ -11,6 +11,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
+
 }
 
 enum HttpMethod {
@@ -60,6 +61,7 @@ model Request {
 model RunLog {
   id             String   @id @default(cuid())
   statusCode     Int?
+  responseHeaders Json?
   responseTimeMs Int?
   responseBody   Json?
   createdAt      DateTime @default(now())
