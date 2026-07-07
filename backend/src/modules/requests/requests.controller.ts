@@ -9,24 +9,7 @@ import {
 } from "./requests.service";
 import e from "cors";
 
-function getUserId(req: Request): string | undefined {
-  if (typeof req.user !== "object" || req.user === null) {
-    return undefined;
-  }
-  return "userId" in req.user && typeof req.user.userId === "string"
-    ? req.user.userId
-    : undefined;
-}
-
-function getCollectionId(req: Request): string | undefined {
-  const rawId = req.params.collectionId;
-  return Array.isArray(rawId) ? rawId[0] : rawId;
-}
-
-function getRequestId(req: Request): string | undefined {
-  const rawId = req.params.id;
-  return Array.isArray(rawId) ? rawId[0] : rawId;
-}
+import { getUserId, getCollectionId, getRequestId } from "../../utils/helper";
 
 export async function createRequestHandler(req: Request, res: Response) {
   const parsed = createRequestSchema.safeParse(req.body);
