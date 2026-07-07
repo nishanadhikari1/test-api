@@ -7,7 +7,6 @@ import {
   updateRequest,
   deleteRequest,
 } from "./requests.service";
-import e from "cors";
 
 import { getUserId, getCollectionId, getRequestId } from "../../utils/helper";
 
