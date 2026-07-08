@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 import { env } from "../config/env";
 
-export function authMiddleware(
+export default function authMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
