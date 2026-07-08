@@ -1,3 +1,4 @@
+import { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 import { getOwnedCollection } from "../../utils/helper";
 
@@ -25,8 +26,8 @@ export async function getRunlogs(
 export async function createRunLog(requestId: string, data: {
   statusCode?: number;
   responseTimeMs?: number;
-  responseHeaders?: unknown;
-  responseBody?: unknown;
+  responseHeaders?: Prisma.InputJsonValue;
+  responseBody?: Prisma.InputJsonValue;
 }) {
   return prisma.runLog.create({
     data: {

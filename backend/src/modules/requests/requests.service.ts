@@ -1,17 +1,9 @@
 import { prisma } from "../../lib/prisma";
+import { Prisma } from "../../../generated/prisma/client";
+import type { Request, Response } from "express";
 import { CreateRequestInput, UpdateRequestInput } from "./requests.schema";
-
-async function getOwnedCollection(userId: string, collectionId: string) {
-  const collection = await prisma.collection.findFirst({
-    where: { id: collectionId, userId },
-  });
-
-  if (!collection) {
-    throw new Error("Collection not found");
-  }
-
-  return collection;
-}
+import { getOwnedCollection } from "../../utils/helper";
+import { createRunLog } from "../runlog/runlog.service";
 
 export async function createRequest(
   userId: string,
@@ -102,4 +94,53 @@ export async function deleteRequest(
   return prisma.request.delete({
     where: { id: requestId },
   });
+}
+
+export async function sendRequest(userId: string, collectionId:string, requestId:string) {
+  await getOwnedCollection(userId, collectionId)
+  const request = await prisma.request.findFirst({
+    where:{id:requestId, collectionId}
+  })
+  if(!request){
+    throw new Error("Request not found")
+  }
+
+  const startTime = Date.now()
+  try {
+    const response = await fetch(request.url, {
+      method:request.method,
+      headers: request.headers as Record<string, string> | null ?? undefined,
+      body: request.body ? JSON.stringify(request.body): undefined
+    })
+
+    const responseTimeMs = Date.now() - startTime
+    const responseHeaders = Object.fromEntries(response.headers.entries());
+    let responseBody:unknown = null;
+    try {
+      responseBody = await response.json();
+    } catch {
+      responseBody = await response.text().catch(() => null);
+    }
+
+    const runLog = await createRunLog(requestId, {
+      statusCode: response.status,
+      responseTimeMs,
+      responseHeaders:responseHeaders as Prisma.InputJsonValue,
+      responseBody:responseBody as Prisma.InputJsonValue,
+    });
+
+    return runLog;
+  } catch (err) {
+    const responseTimeMs = Date.now() - startTime;
+
+    const runLog = await createRunLog(requestId, {
+      statusCode: undefined,
+      responseTimeMs,
+      responseHeaders: undefined,
+      responseBody: { error: (err as Error).message },
+    });
+
+    return runLog
+
+  }
 }
