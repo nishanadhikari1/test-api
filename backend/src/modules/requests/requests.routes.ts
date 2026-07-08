@@ -5,6 +5,7 @@ import {
   getRequestByIdHandler,
   updateRequestHandler,
   deleteRequestHandler,
+  sendRequestHandler,
 } from "./requests.controller";
 
 const router = Router({ mergeParams: true });
@@ -14,5 +15,6 @@ router.get('/', getRequestsHandler)
 router.get('/:id', getRequestByIdHandler)
 router.patch('/:id', updateRequestHandler)
 router.delete('/:id', deleteRequestHandler)
+router.post('/:id/send', sendRequestHandler);
 
 export default router

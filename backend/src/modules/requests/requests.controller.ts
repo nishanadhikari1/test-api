@@ -6,6 +6,7 @@ import {
   getRequestById,
   updateRequest,
   deleteRequest,
+  sendRequest,
 } from "./requests.service";
 
 import { getUserId, getCollectionId, getRequestId } from "../../utils/helper";
@@ -124,9 +125,33 @@ export async function deleteRequestHandler(req: Request, res: Response) {
   }
 
   try {
-    await deleteRequest(userId, collectionId, requestId)
-    res.status(204).send()
+    await deleteRequest(userId, collectionId, requestId);
+    res.status(204).send();
   } catch (error) {
-    res.status(500).json({error:"Failed to delete"})
+    res.status(500).json({ error: "Failed to delete" });
+  }
+}
+
+export async function sendRequestHandler(req: Request, res: Response) {
+  const userId = getUserId(req);
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const collectionId = getCollectionId(req);
+  if (!collectionId) {
+    return res.status(400).json({ error: "Collection id is required" });
+  }
+  const requestId = getRequestId(req);
+  if (!requestId) {
+    return res.status(400).json({ error: "Request id is required" });
+  }
+
+  try{
+    const runLog = await sendRequest(userId, collectionId, requestId)
+    res.status(200).json(runLog)
+  }
+  catch(error){
+    res.status(500).json({error:"Failed to send request"})
+
   }
 }

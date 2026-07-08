@@ -11,8 +11,8 @@ const router = Router();
 
 router.post("/", createCollectionHandler);
 router.get("/", getCollectionsHandler);
-router.get("/:id", getCollectionByIdHandler);
-router.patch("/:id", updateCollectionHandler);
-router.delete("/:id", deleteCollectionHandler);
+router.get("/:collectionId", getCollectionByIdHandler);
+router.patch("/:collectionId", updateCollectionHandler);
+router.delete("/:collectionId", deleteCollectionHandler);
 
 export default router;
