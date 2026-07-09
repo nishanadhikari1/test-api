@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { loginSchema, registerSchema } from "./auth.schema";
 import { loginUser, registerUser } from "./auth.service";
-import { env } from "../../config/env";
 import Tokens from "csrf";
 
 const tokens = new Tokens();
