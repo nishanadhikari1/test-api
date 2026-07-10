@@ -1,15 +1,13 @@
-import { useState } from 'react'
+import { Routes, Route } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
 
 function App() {
-  const [count, setCount] = useState(0)
-  if(count==0)
-  setCount(3)
-
   return (
-    <>
-    Hello
-    </>
-  )
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<div>Home placeholder</div>} />
+    </Routes>
+  );
 }
 
-export default App
+export default App;
