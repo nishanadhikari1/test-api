@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
+import { useContext } from "react";
 
 type User = {
   id: string;
@@ -33,8 +34,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext value={{ user, loading }}>
       {children}
-    </AuthContext.Provider>
+    </AuthContext>
   );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }
