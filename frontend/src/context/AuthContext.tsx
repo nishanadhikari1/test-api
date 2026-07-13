@@ -11,6 +11,7 @@ type User = {
 type AuthContextType = {
   user: User | null;
   loading: boolean;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 };
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function checkAuth() {
       try {
         const result = await apiFetch("/auth/me", { method: "GET" });
-        setUser(result.user);
+        setUser(result);
       } catch (error) {
         setUser(null);
       } finally {
@@ -34,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext value={{ user, loading }}>
+    <AuthContext value={{ user, loading, setUser }}>
       {children}
     </AuthContext>
   );
