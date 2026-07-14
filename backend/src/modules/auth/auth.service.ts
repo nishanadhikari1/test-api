@@ -7,7 +7,7 @@ import {RegisterInput, LoginInput} from './auth.schema'
 export async function registerUser(input: RegisterInput){
     const existing = await prisma.user.findUnique({where:{email:input.email}})
     if(existing){
-        throw new Error("Email already in use")
+        throw new Error("An account with this email already exists.")
     }
 
     const passwordHash = await bcrypt.hash(input.password, 10)
@@ -28,12 +28,12 @@ export async function registerUser(input: RegisterInput){
 export async function loginUser(input: LoginInput){
     const user = await prisma.user.findUnique({where:{email:input.email}})
     if(!user){
-        throw new Error('Email not registered')
+        throw new Error('No account was found with this email address.')
     }
 
     const valid = await bcrypt.compare(input.password, user.passwordHash)
     if(!valid){
-        throw new Error('Password Incorrect')
+        throw new Error('The password you entered is incorrect.')
     }
 
     const token = jwt.sign({userId:user.id}, env.JWT_SECRET, {expiresIn:'1d'})

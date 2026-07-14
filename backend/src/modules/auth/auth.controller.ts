@@ -27,23 +27,23 @@ function setAuthCookies(res: Response, token: string) {
 export async function register(req: Request, res: Response) {
   const parsed = registerSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res
-      .status(400)
-      .json({ error: "Validation failed", details: parsed.error.issues });
+    const message = parsed.error.issues[0]?.message ?? "Please check your input and try again.";
+    return res.status(400).json({ error: message });
   }
   try {
     const result = await registerUser(parsed.data);
     setAuthCookies(res, result.token);
     res.status(201).json(result.user);
   } catch (error) {
-    res.status(409).json({ error: (error as Error).message });
+    res.status(409).json({ error: (error as Error).message || "We couldn’t create your account right now." });
   }
 }
 
 export async function login(req: Request, res: Response) {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
-    return res.status(400).json({ error: "Validation failed" });
+    const message = parsed.error.issues[0]?.message ?? "Please check your email and password and try again.";
+    return res.status(400).json({ error: message });
   }
 
   try {
@@ -51,7 +51,7 @@ export async function login(req: Request, res: Response) {
     setAuthCookies(res, result.token);
     res.status(200).json(result.user);
   } catch (error) {
-    res.status(401).json({ error: (error as Error).message });
+    res.status(401).json({ error: (error as Error).message || "We couldn’t sign you in. Please try again." });
   }
 }
 

@@ -14,7 +14,7 @@ export async function getRunlogs(
   });
 
   if (!request) {
-    throw new Error("Request not found");
+    throw new Error("The selected request could not be found.");
   }
 
   return prisma.runLog.findMany({

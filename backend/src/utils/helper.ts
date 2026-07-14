@@ -26,7 +26,7 @@ export async function getOwnedCollection(userId: string, collectionId: string) {
   });
 
   if (!collection) {
-    throw new Error("Collection not found");
+    throw new Error("The selected collection could not be found.");
   }
 
   return collection;

@@ -5,6 +5,6 @@ export async function errorHandler(err:Error, req: Request, res:Response, next:N
     console.error(err)
 
     res.status(500).json({
-        error:"Something went wrong"
+        error:"Something went wrong on our side. Please try again in a moment."
     })
 }

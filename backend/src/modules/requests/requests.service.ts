@@ -144,7 +144,7 @@ export async function sendRequest(userId: string, collectionId:string, requestId
     where:{id:requestId, collectionId}
   })
   if(!request){
-    throw new Error("Request not found")
+    throw new Error("The selected request could not be found.")
   }
 
   const startTime = Date.now()

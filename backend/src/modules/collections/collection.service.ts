@@ -31,7 +31,7 @@ export async function updateCollection(userId: string, collectionId: string, inp
     where: { id: collectionId, userId },
   });
 
-  if (!existing) throw new Error('Collection not found');
+  if (!existing) throw new Error('The selected collection could not be found.');
 
   return prisma.collection.update({
     where: { id: collectionId },
@@ -46,7 +46,7 @@ export async function deleteCollection(userId: string, collectionId: string) {
     where: { id: collectionId, userId },
   });
 
-  if (!existing) throw new Error('Collection not found');
+  if (!existing) throw new Error('The selected collection could not be found.');
 
   return prisma.collection.delete({
     where: { id: collectionId },

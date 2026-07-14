@@ -10,7 +10,7 @@ export default function authMiddleware(
   const token = req.cookies?.token;
 
   if (!token) {
-    return res.status(401).json({ error: "No token provided" });
+    return res.status(401).json({ error: "Please sign in again to continue." });
   }
 
   try {
@@ -18,6 +18,6 @@ export default function authMiddleware(
     req.user = decoded;
     next();
   } catch (error) {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    return res.status(401).json({ error: "Your session has expired. Please sign in again." });
   }
 }
