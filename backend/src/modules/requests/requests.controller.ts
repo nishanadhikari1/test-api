@@ -7,6 +7,7 @@ import {
   updateRequest,
   deleteRequest,
   sendRequest,
+  sendRequestPayload,
 } from "./requests.service";
 
 import { getUserId, getCollectionId, getRequestId } from "../../utils/helper";
@@ -132,6 +133,29 @@ export async function deleteRequestHandler(req: Request, res: Response) {
   }
 }
 
+export async function sendRequestDirectHandler(req: Request, res: Response) {
+  const parsed = createRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Validation failed", details: parsed.error.issues });
+  }
+
+  const userId = getUserId(req);
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const collectionId = getCollectionId(req);
+  if (!collectionId) {
+    return res.status(400).json({ error: "Collection id is required" });
+  }
+
+  try {
+    const runLog = await sendRequestPayload(userId, collectionId, parsed.data);
+    return res.status(200).json(runLog);
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to send request" });
+  }
+}
+
 export async function sendRequestHandler(req: Request, res: Response) {
   const userId = getUserId(req);
   if (!userId) {
@@ -146,12 +170,10 @@ export async function sendRequestHandler(req: Request, res: Response) {
     return res.status(400).json({ error: "Request id is required" });
   }
 
-  try{
-    const runLog = await sendRequest(userId, collectionId, requestId)
-    res.status(200).json(runLog)
-  }
-  catch(error){
-    res.status(500).json({error:"Failed to send request"})
-
+  try {
+    const runLog = await sendRequest(userId, collectionId, requestId);
+    res.status(200).json(runLog);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to send request" });
   }
 }

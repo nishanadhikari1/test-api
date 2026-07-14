@@ -32,18 +32,18 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm bg-white p-8 rounded-lg shadow-sm border border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-900 mb-1">
+    <div className="min-h-screen flex items-center justify-center bg-[#1e1e1e] px-4">
+      <div className="w-full max-w-sm border border-gray-700 bg-[#181818] p-8 rounded-lg shadow-sm">
+        <h1 className="text-xl font-semibold text-white mb-1">
           Create account
         </h1>
-        <p className="text-sm text-gray-500 mb-6">Set up your API workspace</p>
+        <p className="text-sm text-gray-400 mb-6">Set up your API workspace</p>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-300 mb-1"
             >
               Name
             </label>
@@ -52,7 +52,7 @@ export default function RegisterPage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-[#2a2a2a] text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-orange-400"
               placeholder="Your name"
             />
           </div>
@@ -60,7 +60,7 @@ export default function RegisterPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-300 mb-1"
             >
               Email
             </label>
@@ -69,7 +69,7 @@ export default function RegisterPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-[#2a2a2a] text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-orange-400"
               placeholder="you@example.com"
             />
           </div>
@@ -77,7 +77,7 @@ export default function RegisterPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-300 mb-1"
             >
               Password
             </label>
@@ -86,25 +86,25 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full px-3 py-2 border border-gray-600 rounded-md bg-[#2a2a2a] text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-orange-400"
               placeholder="••••••••"
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-400">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-black text-white py-2 rounded-md text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+            className="w-full bg-orange-500 text-white py-2 rounded-md text-sm font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors"
           >
             {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
 
-        <p className="text-sm text-gray-500 mt-4 text-center">
+        <p className="text-sm text-gray-400 mt-4 text-center">
           Already have an account?{" "}
-          <Link to="/login" className="text-black font-medium hover:underline">
+          <Link to="/login" className="text-orange-400 font-medium hover:underline">
             Login
           </Link>
         </p>

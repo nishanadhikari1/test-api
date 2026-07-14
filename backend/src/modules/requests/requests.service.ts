@@ -96,6 +96,48 @@ export async function deleteRequest(
   });
 }
 
+export async function sendRequestPayload(
+  userId: string,
+  collectionId: string,
+  input: CreateRequestInput,
+) {
+  await getOwnedCollection(userId, collectionId);
+
+  const startTime = Date.now();
+  try {
+    const response = await fetch(input.url, {
+      method: input.method,
+      headers: input.headers as Record<string, string> | undefined,
+      body: input.body !== undefined ? (typeof input.body === "string" ? input.body : JSON.stringify(input.body)) : undefined,
+    });
+
+    const responseTimeMs = Date.now() - startTime;
+    const responseHeaders = Object.fromEntries(response.headers.entries());
+    let responseBody: unknown = null;
+    try {
+      responseBody = await response.json();
+    } catch {
+      responseBody = await response.text().catch(() => null);
+    }
+
+    return {
+      statusCode: response.status,
+      responseTimeMs,
+      responseHeaders: responseHeaders as Prisma.InputJsonValue,
+      responseBody: responseBody as Prisma.InputJsonValue,
+    };
+  } catch (err) {
+    const responseTimeMs = Date.now() - startTime;
+
+    return {
+      statusCode: undefined,
+      responseTimeMs,
+      responseHeaders: undefined,
+      responseBody: { error: (err as Error).message },
+    };
+  }
+}
+
 export async function sendRequest(userId: string, collectionId:string, requestId:string) {
   await getOwnedCollection(userId, collectionId)
   const request = await prisma.request.findFirst({
