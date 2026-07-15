@@ -5,6 +5,7 @@ import authRoutes from './modules/auth/auth.routes';
 import collectionRoutes from './modules/collections/collection.routes'
 import requestRoutes from './modules/requests/requests.routes'
 import runlogsRoutes from './modules/runlog/runlog.routes'
+import cookiejarRoutes from './modules/cookiejar/cookiejar.routes'
 import authMiddleware from './middleware/auth.middleware';
 import { authLimiter } from './middleware/rateLimitter'
 import { errorHandler } from './middleware/errorHandler';
@@ -23,6 +24,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/collections', authMiddleware, csrfMiddleware, collectionRoutes)
 app.use('/api/collections/:collectionId/requests', authMiddleware, csrfMiddleware, requestRoutes)
 app.use('/api/collections/:collectionId/requests/:id/runs', authMiddleware, csrfMiddleware, runlogsRoutes)
+app.use('/api/cookiejar', authMiddleware, csrfMiddleware, cookiejarRoutes)
 app.use(errorHandler)
 
 app.get('/', (req, res) => {
