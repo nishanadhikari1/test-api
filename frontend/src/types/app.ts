@@ -17,3 +17,14 @@ export type RunLogResult = {
 };
 
 export type KeyValuePair = { key: string; value: string; enabled: boolean };
+
+export type StoredCookie = {
+  id: string;
+  name: string;
+  value: string;
+  path: string;
+  expires: string | null;
+  httpOnly: boolean;
+};
+
+export type CookieJarByDomain = Record<string, StoredCookie[]>;

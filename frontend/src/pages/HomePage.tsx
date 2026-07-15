@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Send, Play } from "lucide-react";
+import { Send, Play, Cookie } from "lucide-react";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
 import RequestBuilder from "../components/RequestBuilder";
 import ResponsePanel from "../components/ResponsePanel";
+import CookieJarPanel from "../components/CookieJarPanel";
 import type { Collection, KeyValuePair, RequestItem, RunLogResult } from "../types/app";
 
 const DEFAULT_HEADER_PRESETS: KeyValuePair[] = [
@@ -101,6 +102,9 @@ export default function Homepage() {
   const [sendingDirect, setSendingDirect] = useState(false);
   const [directResponse, setDirectResponse] = useState<RunLogResult | null>(null);
   const [directResponseTab, setDirectResponseTab] = useState<"body" | "headers" | "cookies">("body");
+
+  const [cookieJarOpen, setCookieJarOpen] = useState(false);
+  const [cookieJarRefreshKey, setCookieJarRefreshKey] = useState(0);
 
   useEffect(() => {
     async function loadCollections() {
@@ -362,6 +366,7 @@ export default function Homepage() {
       const result = await apiFetch(`/collections/${collectionId}/requests/${requestId}/send`, { method: "POST" });
       setResponsesByRequest((prev) => ({ ...prev, [requestId]: result as RunLogResult }));
       setResponseTab((prev) => ({ ...prev, [requestId]: "body" }));
+      setCookieJarRefreshKey((k) => k + 1);
     } catch (err) {
       setResponsesByRequest((prev) => ({
         ...prev,
@@ -431,6 +436,7 @@ export default function Homepage() {
 
       setDirectResponse(result as RunLogResult);
       setDirectResponseTab("body");
+      setCookieJarRefreshKey((k) => k + 1);
     } catch (err) {
       setDirectResponse({
         statusCode: null,
@@ -450,12 +456,21 @@ export default function Homepage() {
       <header className="border-b border-gray-700 bg-[#1e1e1e] flex-shrink-0">
         <div className="px-4 py-3 flex items-center justify-between">
           <h1 className="text-sm font-semibold text-white">API Workspace</h1>
-          <button
-            onClick={handleLogout}
-            className="text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded border border-gray-600 hover:border-gray-400 transition-colors"
-          >
-            Log out
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCookieJarOpen((v) => !v)}
+              className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border transition-colors ${cookieJarOpen ? "border-orange-400 text-orange-400" : "border-gray-600 text-gray-400 hover:border-gray-400 hover:text-white"}`}
+            >
+              <Cookie size={12} />
+              Cookies
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded border border-gray-600 hover:border-gray-400 transition-colors"
+            >
+              Log out
+            </button>
+          </div>
         </div>
       </header>
 
@@ -496,6 +511,12 @@ export default function Homepage() {
           onDeleteRequest={handleDeleteRequest}
           onStartNewRequest={handleStartNewRequest}
         />
+
+        {cookieJarOpen && (
+          <div className="w-72 border-l border-gray-700 bg-[#181818] flex flex-col flex-shrink-0 overflow-hidden">
+            <CookieJarPanel refreshKey={cookieJarRefreshKey} />
+          </div>
+        )}
 
         <main className="flex-1 overflow-y-auto bg-[#1e1e1e]">
           {!collectionId ? (
