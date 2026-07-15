@@ -4,6 +4,7 @@ import type { Request, Response } from "express";
 import { CreateRequestInput, UpdateRequestInput } from "./requests.schema";
 import { getOwnedCollection } from "../../utils/helper";
 import { createRunLog } from "../runlog/runlog.service";
+import { getCookieHeaderForUrl, persistCookiesFromResponse } from "../cookiejar/cookiejar.service";
 
 export async function createRequest(
   userId: string,
@@ -103,16 +104,29 @@ export async function sendRequestPayload(
 ) {
   await getOwnedCollection(userId, collectionId);
 
+  const jarCookieHeader = await getCookieHeaderForUrl(userId, input.url);
+  const outgoingHeaders: Record<string, string> = {
+    ...(input.headers as Record<string, string> | undefined),
+  };
+  if (jarCookieHeader) {
+    outgoingHeaders['Cookie'] = outgoingHeaders['Cookie']
+      ? `${outgoingHeaders['Cookie']}; ${jarCookieHeader}`
+      : jarCookieHeader;
+  }
+
   const startTime = Date.now();
   try {
     const response = await fetch(input.url, {
       method: input.method,
-      headers: input.headers as Record<string, string> | undefined,
+      headers: outgoingHeaders,
       body: input.body !== undefined ? (typeof input.body === "string" ? input.body : JSON.stringify(input.body)) : undefined,
     });
 
     const responseTimeMs = Date.now() - startTime;
     const responseHeaders = Object.fromEntries(response.headers.entries());
+
+    await persistCookiesFromResponse(userId, input.url, responseHeaders);
+
     let responseBody: unknown = null;
     try {
       responseBody = await response.json();
@@ -138,26 +152,38 @@ export async function sendRequestPayload(
   }
 }
 
-export async function sendRequest(userId: string, collectionId:string, requestId:string) {
+export async function sendRequest(userId: string, collectionId: string, requestId: string) {
   await getOwnedCollection(userId, collectionId)
   const request = await prisma.request.findFirst({
-    where:{id:requestId, collectionId}
+    where: { id: requestId, collectionId }
   })
-  if(!request){
+  if (!request) {
     throw new Error("The selected request could not be found.")
+  }
+
+  const jarCookieHeader = await getCookieHeaderForUrl(userId, request.url);
+  const savedHeaders = request.headers as Record<string, string> | null ?? {};
+  const outgoingHeaders: Record<string, string> = { ...savedHeaders };
+  if (jarCookieHeader) {
+    outgoingHeaders['Cookie'] = outgoingHeaders['Cookie']
+      ? `${outgoingHeaders['Cookie']}; ${jarCookieHeader}`
+      : jarCookieHeader;
   }
 
   const startTime = Date.now()
   try {
     const response = await fetch(request.url, {
-      method:request.method,
-      headers: request.headers as Record<string, string> | null ?? undefined,
-      body: request.body ? JSON.stringify(request.body): undefined
+      method: request.method,
+      headers: outgoingHeaders,
+      body: request.body ? JSON.stringify(request.body) : undefined
     })
 
     const responseTimeMs = Date.now() - startTime
     const responseHeaders = Object.fromEntries(response.headers.entries());
-    let responseBody:unknown = null;
+
+    await persistCookiesFromResponse(userId, request.url, responseHeaders);
+
+    let responseBody: unknown = null;
     try {
       responseBody = await response.json();
     } catch {
@@ -167,8 +193,8 @@ export async function sendRequest(userId: string, collectionId:string, requestId
     const runLog = await createRunLog(requestId, {
       statusCode: response.status,
       responseTimeMs,
-      responseHeaders:responseHeaders as Prisma.InputJsonValue,
-      responseBody:responseBody as Prisma.InputJsonValue,
+      responseHeaders: responseHeaders as Prisma.InputJsonValue,
+      responseBody: responseBody as Prisma.InputJsonValue,
     });
 
     return runLog;
@@ -183,6 +209,5 @@ export async function sendRequest(userId: string, collectionId:string, requestId
     });
 
     return runLog
-
   }
 }
