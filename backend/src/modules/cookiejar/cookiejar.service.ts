@@ -83,17 +83,27 @@ export async function getCookieHeaderForUrl(userId: string, url: string): Promis
   return applicable.map((c) => `${c.name}=${c.value}`).join('; ');
 }
 
+export type PersistedCookie = {
+  id: string;
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  expires: Date | null;
+  httpOnly: boolean;
+  secure: boolean;
+};
+
 export async function persistCookiesFromResponse(
   userId: string,
   requestUrl: string,
   responseHeaders: Headers,
-): Promise<void> {
+): Promise<PersistedCookie[]> {
   const requestDomain = extractDomain(requestUrl);
-
   const setCookieHeaders = responseHeaders.getSetCookie();
-  if (setCookieHeaders.length === 0) return;
+  if (setCookieHeaders.length === 0) return [];
 
-  const ops: Promise<unknown>[] = [];
+  const results: PersistedCookie[] = [];
 
   for (const header of setCookieHeaders) {
     const parsed = parseSetCookieHeader(header);
@@ -103,44 +113,45 @@ export async function persistCookiesFromResponse(
     const isExpired = parsed.expires !== undefined && parsed.expires <= new Date();
 
     if (isExpired) {
-      ops.push(
-        prisma.cookieJar.deleteMany({
-          where: { userId, domain: effectiveDomain, name: parsed.name, path: parsed.path },
-        }),
-      );
+      await prisma.cookieJar.deleteMany({
+        where: { userId, domain: effectiveDomain, name: parsed.name, path: parsed.path },
+      });
     } else {
-      ops.push(
-        prisma.cookieJar.upsert({
-          where: {
-            userId_domain_name_path: {
-              userId,
-              domain: effectiveDomain,
-              name: parsed.name,
-              path: parsed.path,
-            },
-          },
-          update: {
-            value: parsed.value,
-            expires: parsed.expires ?? null,
-            httpOnly: parsed.httpOnly,
-            secure: parsed.secure,
-          },
-          create: {
-            userId,
-            domain: effectiveDomain,
-            name: parsed.name,
-            value: parsed.value,
-            path: parsed.path,
-            expires: parsed.expires ?? null,
-            httpOnly: parsed.httpOnly,
-            secure: parsed.secure,
-          },
-        }),
-      );
+      const upserted = await prisma.cookieJar.upsert({
+        where: {
+          userId_domain_name_path: { userId, domain: effectiveDomain, name: parsed.name, path: parsed.path },
+        },
+        update: {
+          value: parsed.value,
+          expires: parsed.expires ?? null,
+          httpOnly: parsed.httpOnly,
+          secure: parsed.secure,
+        },
+        create: {
+          userId,
+          domain: effectiveDomain,
+          name: parsed.name,
+          value: parsed.value,
+          path: parsed.path,
+          expires: parsed.expires ?? null,
+          httpOnly: parsed.httpOnly,
+          secure: parsed.secure,
+        },
+      });
+      results.push({
+        id: upserted.id,
+        name: upserted.name,
+        value: upserted.value,
+        domain: upserted.domain,
+        path: upserted.path,
+        expires: upserted.expires,
+        httpOnly: upserted.httpOnly,
+        secure: upserted.secure,
+      });
     }
   }
 
-  await Promise.all(ops);
+  return results;
 }
 
 export async function getCookiesByDomain(userId: string) {
@@ -156,14 +167,7 @@ export async function getCookiesByDomain(userId: string) {
 
   for (const c of cookies) {
     if (!grouped[c.domain]) grouped[c.domain] = [];
-    grouped[c.domain].push({
-      id: c.id,
-      name: c.name,
-      value: c.value,
-      path: c.path,
-      expires: c.expires,
-      httpOnly: c.httpOnly,
-    });
+    grouped[c.domain].push({ id: c.id, name: c.name, value: c.value, path: c.path, expires: c.expires, httpOnly: c.httpOnly });
   }
 
   return grouped;
