@@ -12,6 +12,7 @@ export default function CookieJarPanel({ refreshKey }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [expandedDomains, setExpandedDomains] = useState<Set<string>>(new Set());
+  const [expandedCookies, setExpandedCookies] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -75,8 +76,15 @@ export default function CookieJarPanel({ refreshKey }: Props) {
   function toggleDomain(domain: string) {
     setExpandedDomains((prev) => {
       const next = new Set(prev);
-      if (next.has(domain)) next.delete(domain);
-      else next.add(domain);
+      next.has(domain) ? next.delete(domain) : next.add(domain);
+      return next;
+    });
+  }
+
+  function toggleCookie(id: string) {
+    setExpandedCookies((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   }
@@ -116,24 +124,23 @@ export default function CookieJarPanel({ refreshKey }: Props) {
             <Cookie size={20} className="text-gray-600 mb-2" />
             <p className="text-xs text-gray-500">No cookies yet.</p>
             <p className="text-[11px] text-gray-600 mt-1">
-              Cookies from API responses will be stored here automatically and sent with future requests to the same domain.
+              Cookies from API responses are stored here and sent automatically with future requests to the same domain.
             </p>
           </div>
         )}
 
         {domains.map((domain) => {
           const cookies = jar[domain];
-          const isExpanded = expandedDomains.has(domain);
+          const isDomainExpanded = expandedDomains.has(domain);
 
           return (
             <div key={domain} className="border-b border-gray-800">
               <div className="flex items-center gap-1 px-2 py-1.5 hover:bg-[#252525]">
                 <button onClick={() => toggleDomain(domain)} className="flex-1 flex items-center gap-1.5 text-left">
-                  {isExpanded ? (
-                    <ChevronDown size={11} className="text-gray-500 flex-shrink-0" />
-                  ) : (
-                    <ChevronRight size={11} className="text-gray-500 flex-shrink-0" />
-                  )}
+                  {isDomainExpanded
+                    ? <ChevronDown size={11} className="text-gray-500 flex-shrink-0" />
+                    : <ChevronRight size={11} className="text-gray-500 flex-shrink-0" />
+                  }
                   <span className="text-xs font-medium text-gray-300 truncate">{domain}</span>
                   <span className="text-[10px] text-gray-500 ml-1">
                     {cookies.length} cookie{cookies.length !== 1 ? "s" : ""}
@@ -144,34 +151,65 @@ export default function CookieJarPanel({ refreshKey }: Props) {
                 </button>
               </div>
 
-              {isExpanded && (
+              {isDomainExpanded && (
                 <div className="ml-4 border-l border-gray-800">
-                  {cookies.map((cookie) => (
-                    <div key={cookie.id} className="flex items-start gap-2 px-3 py-1.5 hover:bg-[#252525] group">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-mono text-orange-400 font-medium truncate">{cookie.name}</span>
-                          {cookie.httpOnly && (
-                            <span className="text-[9px] bg-gray-700 text-gray-400 rounded px-1">HttpOnly</span>
-                          )}
+                  {cookies.map((cookie) => {
+                    const isCookieExpanded = expandedCookies.has(cookie.id);
+                    return (
+                      <div key={cookie.id} className="border-b border-gray-800 last:border-0">
+                        <div
+                          onClick={() => toggleCookie(cookie.id)}
+                          className="flex items-center gap-2 px-3 py-1.5 hover:bg-[#252525] cursor-pointer group"
+                        >
+                          {isCookieExpanded
+                            ? <ChevronDown size={10} className="text-gray-600 flex-shrink-0" />
+                            : <ChevronRight size={10} className="text-gray-600 flex-shrink-0" />
+                          }
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] font-mono text-orange-400 font-medium truncate">{cookie.name}</span>
+                              {cookie.httpOnly && (
+                                <span className="text-[9px] bg-gray-700 text-gray-400 rounded px-1 flex-shrink-0">HttpOnly</span>
+                              )}
+                            </div>
+                            {!isCookieExpanded && (
+                              <p className="text-[10px] font-mono text-gray-500 truncate mt-0.5">
+                                {cookie.value || <span className="italic text-gray-600">empty</span>}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); deleteCookie(domain, cookie); }}
+                            className="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 flex-shrink-0"
+                          >
+                            <Trash2 size={10} />
+                          </button>
                         </div>
-                        <p className="text-[10px] font-mono text-gray-400 truncate mt-0.5">
-                          {cookie.value || <span className="italic text-gray-600">empty</span>}
-                        </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[9px] text-gray-600">path: {cookie.path}</span>
-                          {cookie.expires ? (
-                            <span className="text-[9px] text-gray-600">exp: {new Date(cookie.expires).toLocaleDateString()}</span>
-                          ) : (
-                            <span className="text-[9px] text-gray-600">session</span>
-                          )}
-                        </div>
+
+                        {isCookieExpanded && (
+                          <div className="mx-3 mb-2 rounded border border-gray-700 overflow-hidden">
+                            <table className="w-full text-[11px]">
+                              <tbody>
+                                {([
+                                  ["Name", cookie.name],
+                                  ["Value", cookie.value || "(empty)"],
+                                  ["Domain", domain],
+                                  ["Path", cookie.path],
+                                  ["Expires", cookie.expires ? new Date(cookie.expires).toUTCString() : "Session"],
+                                  ["HttpOnly", cookie.httpOnly ? "Yes" : "No"],
+                                ] as [string, string][]).map(([label, val], idx) => (
+                                  <tr key={label} className={idx % 2 === 0 ? "bg-[#1e1e1e]" : "bg-[#252525]"}>
+                                    <td className="px-2 py-1 text-gray-500 font-medium w-20 whitespace-nowrap">{label}</td>
+                                    <td className="px-2 py-1 text-gray-300 font-mono break-all">{val}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
                       </div>
-                      <button onClick={() => deleteCookie(domain, cookie)} className="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5">
-                        <Trash2 size={10} />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
