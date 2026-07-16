@@ -66,10 +66,7 @@ export function parseSetCookieHeader(header: string): {
   return { name, value, domain, path, expires, httpOnly, secure };
 }
 
-export async function getCookieHeaderForUrl(
-  userId: string,
-  url: string,
-): Promise<string | null> {
+export async function getCookieHeaderForUrl(userId: string, url: string): Promise<string | null> {
   const requestDomain = extractDomain(url);
   const now = new Date();
 
@@ -80,10 +77,7 @@ export async function getCookieHeaderForUrl(
     },
   });
 
-  const applicable = allCookies.filter((c) =>
-    domainMatches(c.domain, requestDomain),
-  );
-
+  const applicable = allCookies.filter((c) => domainMatches(c.domain, requestDomain));
   if (applicable.length === 0) return null;
 
   return applicable.map((c) => `${c.name}=${c.value}`).join('; ');
@@ -92,16 +86,12 @@ export async function getCookieHeaderForUrl(
 export async function persistCookiesFromResponse(
   userId: string,
   requestUrl: string,
-  responseHeaders: Record<string, string>,
+  responseHeaders: Headers,
 ): Promise<void> {
   const requestDomain = extractDomain(requestUrl);
 
-  const raw = responseHeaders['set-cookie'];
-  if (!raw) return;
-
-  // Split on ", " that is followed by a new cookie name=value pair.
-  // This avoids splitting on commas inside Expires date strings.
-  const setCookieHeaders = raw.split(/,\s*(?=[^;,=\s]+=[^;,]*)/);
+  const setCookieHeaders = responseHeaders.getSetCookie();
+  if (setCookieHeaders.length === 0) return;
 
   const ops: Promise<unknown>[] = [];
 
