@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Send, Play, Cookie } from "lucide-react";
+import { Send, Cookie, Edit, Trash2 } from "lucide-react";
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import Sidebar from "../components/Sidebar";
@@ -85,7 +85,7 @@ export default function Homepage() {
   const [name, setName] = useState("");
   const [method, setMethod] = useState("GET");
   const [url, setUrl] = useState("");
-  const [requestTab, setRequestTab] = useState<"params" | "headers" | "body" | "auth">("headers");
+  const [requestTab, setRequestTab] = useState<"params" | "headers" | "body" | "auth">("body");
   const [params, setParams] = useState<KeyValuePair[]>([createEmptyPair()]);
   const [reqHeaders, setReqHeaders] = useState<KeyValuePair[]>(DEFAULT_HEADER_PRESETS.map((item) => ({ ...item })));
   const [bodyType, setBodyType] = useState<"none" | "json" | "form">("none");
@@ -588,10 +588,10 @@ export default function Homepage() {
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                               <button onClick={() => handleSelectRequest(collectionId, req)} className="text-gray-400 hover:text-orange-400">
-                                <Play size={10} />
+                                <Edit size={10} />
                               </button>
                               <button onClick={() => handleDeleteRequest(req.id)} className="text-gray-400 hover:text-red-400">
-                                <Send size={10} />
+                                <Trash2 size={10} />
                               </button>
                               <button onClick={() => handleSendRequest(req.id)} disabled={isSending} className="flex items-center gap-1.5 px-3 py-1 bg-orange-500 text-white rounded text-xs font-semibold hover:bg-orange-600 disabled:opacity-50 transition-colors">
                                 <Send size={10} />
